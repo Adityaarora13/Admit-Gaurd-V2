@@ -1,0 +1,31 @@
+{
+  "program": "PG Diploma in AI-ML & Agentic AI Engineering",
+  "institution": "IIT Gandhinagar",
+  "program_start_date": "2025-09-01",
+  "age_rules": { "min": 18, "max": 35 },
+  "education_rules": {
+    "mandatory_levels": ["10th"],
+    "path_a_mandatory": ["10th", "12th", "UG"],
+    "path_b_mandatory": ["10th", "Diploma", "UG"],
+    "min_ug_percentage": 60.0,
+    "min_ug_cgpa_10": 6.0,
+    "max_education_gap_months": 24,
+    "graduation_year_range": { "min": 2015, "max": 2025 }
+  },
+  "work_rules": {
+    "max_career_gap_months": 6,
+    "flag_if_no_experience_years_since_education": 3,
+    "max_unrelated_domain_switches": 3
+  },
+  "screening": {
+    "min_test_score": 40,
+    "max_test_score": 100
+  },
+  "soft_rule_exception": {
+    "max_exceptions_before_manager_review": 2,
+    "required_keywords": ["approved by", "special case", "documentation pending", "waiver granted"],
+    "min_rationale_length": 30
+  },
+  "valid_qualifications": ["B.Tech", "B.E.", "B.Sc", "BCA", "M.Tech", "M.Sc", "MCA", "MBA"],
+  "valid_interview_statuses": ["Cleared", "Waitlisted", "Rejected"]
+}
