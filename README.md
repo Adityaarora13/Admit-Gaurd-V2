@@ -20,7 +20,7 @@ AdmitGuard v2 is a full-stack admission data validation platform that replaces m
 |-------|-----|
 | Frontend (Vercel) | `https://admit-gaurd-v2.vercel.app` |
 | Backend API (Render) | `https://admitguard-v2-api.onrender.com` |
-| Google Sheet (Live Data) | *(share link here)* |
+| Google Sheet (Live Data) | 'https://docs.google.com/spreadsheets/d/1RQkXmB-I_peOYY6ID7W-KZp9zrk2Pl9erbsn1ckX67Y/edit?usp=sharing' |
 
 > Backend is on Render free tier — first request after 15 min idle takes ~30 seconds to wake up.
 
