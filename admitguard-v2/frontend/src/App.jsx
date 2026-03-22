@@ -15,55 +15,28 @@ import { motion, AnimatePresence } from 'motion/react';
 import StepIndicator from './components/StepIndicator';
 import Step1_PersonalInfo from './pages/Step1_PersonalInfo';
 import Step2_Education from './pages/Step2_Education';
-
-// Placeholder components for remaining steps
-const Step3_WorkExperience = ({ onNext, onBack }) => (
-  <div className="text-center py-20 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-    <Briefcase className="w-16 h-16 text-indigo-600 mx-auto" />
-    <h2 className="text-2xl font-bold">Work Experience</h2>
-    <p className="text-gray-500">This section will capture your professional history.</p>
-    <div className="flex gap-4 max-w-xs mx-auto pt-8">
-      <button onClick={onBack} className="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50">Back</button>
-      <button onClick={onNext} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700">Next</button>
-    </div>
-  </div>
-);
-
-const Step4_Documents = ({ onNext, onBack }) => (
-  <div className="text-center py-20 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-    <FileText className="w-16 h-16 text-indigo-600 mx-auto" />
-    <h2 className="text-2xl font-bold">Documents & Test</h2>
-    <p className="text-gray-500">Upload your transcripts and enter test scores.</p>
-    <div className="flex gap-4 max-w-xs mx-auto pt-8">
-      <button onClick={onBack} className="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50">Back</button>
-      <button onClick={onNext} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700">Next</button>
-    </div>
-  </div>
-);
-
-const Step5_Review = ({ onBack }) => (
-  <div className="text-center py-20 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-    <CheckCircle className="w-16 h-16 text-green-600 mx-auto" />
-    <h2 className="text-2xl font-bold">Review & Submit</h2>
-    <p className="text-gray-500">Double check all information before final submission.</p>
-    <div className="flex gap-4 max-w-xs mx-auto pt-8">
-      <button onClick={onBack} className="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50">Back</button>
-      <button className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700">Submit</button>
-    </div>
-  </div>
-);
+import Step3_WorkExperience from './pages/Step3_WorkExperience';
+import Step4_DocumentsTest from './pages/Step4_DocumentsTest';
+import Step5_ReviewSubmit from './pages/Step5_ReviewSubmit';
+import SuccessScreen from './components/SuccessScreen';
+import { AlertCircle, X } from 'lucide-react';
 
 const App = () => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState(null);
+  const [errorModal, setErrorModal] = useState(null);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     phone: '',
     date_of_birth: '',
     exception_rationale: '',
+    aadhaar_number: '',
     education: [],
     work_experience: [],
-    screening_test_score: null,
+    no_experience: false,
+    screening_test_score: 0,
     interview_status: null,
     exceptions: {}
   });
@@ -76,7 +49,35 @@ const App = () => {
     "Review & Submit"
   ];
 
+  const handleReset = () => {
+    setFormData({
+      full_name: '',
+      email: '',
+      phone: '',
+      date_of_birth: '',
+      exception_rationale: '',
+      aadhaar_number: '',
+      education: [],
+      work_experience: [],
+      no_experience: false,
+      screening_test_score: 0,
+      interview_status: null,
+      exceptions: {}
+    });
+    setCurrentStep(0);
+    setIsSuccess(false);
+    setSubmissionResult(null);
+  };
+
   const renderStep = () => {
+    if (isSuccess) {
+      return <SuccessScreen 
+        result={submissionResult} 
+        applicantName={formData.full_name} 
+        onReset={handleReset} 
+      />;
+    }
+
     switch (currentStep) {
       case 0:
         return <Step1_PersonalInfo 
@@ -93,17 +94,27 @@ const App = () => {
         />;
       case 2:
         return <Step3_WorkExperience 
+          formData={formData}
+          setFormData={setFormData}
           onNext={() => setCurrentStep(3)} 
           onBack={() => setCurrentStep(1)} 
         />;
       case 3:
-        return <Step4_Documents 
+        return <Step4_DocumentsTest 
+          formData={formData}
+          setFormData={setFormData}
           onNext={() => setCurrentStep(4)} 
           onBack={() => setCurrentStep(2)} 
         />;
       case 4:
-        return <Step5_Review 
+        return <Step5_ReviewSubmit 
+          formData={formData}
           onBack={() => setCurrentStep(3)} 
+          onSuccess={(res) => {
+            setSubmissionResult(res);
+            setIsSuccess(true);
+          }}
+          onError={(err) => setErrorModal(err)}
         />;
       default:
         return null;
@@ -171,7 +182,7 @@ const App = () => {
           <div className="mt-12">
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentStep}
+                key={isSuccess ? 'success' : currentStep}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -183,6 +194,51 @@ const App = () => {
           </div>
         </div>
       </main>
+
+      {/* Error Modal */}
+      {errorModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in duration-300">
+            <div className="bg-red-600 p-6 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-6 h-6" />
+                <h3 className="text-xl font-black tracking-tight">Submission Failed</h3>
+              </div>
+              <button onClick={() => setErrorModal(null)} className="hover:rotate-90 transition-transform">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-8 space-y-6">
+              <div className="space-y-2">
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">System Message</p>
+                <p className="text-gray-700 font-medium leading-relaxed">
+                  {errorModal.tier === 'HARD_REJECT' 
+                    ? "Your application was rejected by the automated validation engine due to the following critical issues:"
+                    : errorModal.message || "An unexpected error occurred during validation."}
+                </p>
+              </div>
+
+              {errorModal.errors && (
+                <div className="space-y-3">
+                  {errorModal.errors.map((err, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 bg-red-50 rounded-xl border border-red-100">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
+                      <p className="text-xs text-red-800 font-bold">{err}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button 
+                onClick={() => setErrorModal(null)}
+                className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-gray-800 transition-all"
+              >
+                Close and Fix Issues
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
