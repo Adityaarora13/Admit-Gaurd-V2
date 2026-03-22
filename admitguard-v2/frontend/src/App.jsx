@@ -19,9 +19,13 @@ import Step3_WorkExperience from './pages/Step3_WorkExperience';
 import Step4_DocumentsTest from './pages/Step4_DocumentsTest';
 import Step5_ReviewSubmit from './pages/Step5_ReviewSubmit';
 import SuccessScreen from './components/SuccessScreen';
-import { AlertCircle, X } from 'lucide-react';
+import Dashboard from './pages/Dashboard';
+import AuditLog from './pages/AuditLog';
+import { saveSubmission } from './utils/localStore';
+import { AlertCircle, X, FileSpreadsheet, PlusCircle } from 'lucide-react';
 
 const App = () => {
+  const [activePage, setActivePage] = useState('application'); // 'application', 'dashboard', 'audit'
   const [currentStep, setCurrentStep] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
@@ -111,6 +115,7 @@ const App = () => {
           formData={formData}
           onBack={() => setCurrentStep(3)} 
           onSuccess={(res) => {
+            saveSubmission(res, formData);
             setSubmissionResult(res);
             setIsSuccess(true);
           }}
@@ -122,10 +127,10 @@ const App = () => {
   };
 
   const sidebarItems = [
-    { icon: LayoutDashboard, label: "Dashboard", active: false },
-    { icon: User, label: "My Application", active: true },
-    { icon: Settings, label: "Settings", active: false },
-    { icon: HelpCircle, label: "Help & Support", active: false },
+    { id: 'dashboard', icon: LayoutDashboard, label: "Dashboard" },
+    { id: 'application', icon: PlusCircle, label: "New Application" },
+    { id: 'audit', icon: FileSpreadsheet, label: "Audit Log" },
+    { id: 'settings', icon: Settings, label: "Settings" },
   ];
 
   return (
@@ -139,11 +144,12 @@ const App = () => {
           </div>
           
           <nav className="space-y-2">
-            {sidebarItems.map((item, i) => (
+            {sidebarItems.map((item) => (
               <button 
-                key={i}
+                key={item.id}
+                onClick={() => setActivePage(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                  item.active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  activePage === item.id ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -165,8 +171,12 @@ const App = () => {
       <main className="flex-1 overflow-y-auto">
         <header className="bg-white border-b border-gray-100 px-12 py-6 flex justify-between items-center sticky top-0 z-10">
           <div>
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Application Portal</h2>
-            <p className="text-lg font-bold text-gray-900">{steps[currentStep]}</p>
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest">AdmitGuard v2</h2>
+            <p className="text-lg font-bold text-gray-900">
+              {activePage === 'dashboard' ? 'System Dashboard' : 
+               activePage === 'audit' ? 'Audit Trail' : 
+               steps[currentStep]}
+            </p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
@@ -178,17 +188,19 @@ const App = () => {
         </header>
 
         <div className="px-12 py-12">
-          <StepIndicator currentStep={currentStep} steps={steps} />
-          <div className="mt-12">
+          {activePage === 'application' && !isSuccess && <StepIndicator currentStep={currentStep} steps={steps} />}
+          <div className={activePage === 'application' && !isSuccess ? 'mt-12' : ''}>
             <AnimatePresence mode="wait">
               <motion.div
-                key={isSuccess ? 'success' : currentStep}
+                key={activePage === 'application' ? (isSuccess ? 'success' : currentStep) : activePage}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                {renderStep()}
+                {activePage === 'dashboard' ? <Dashboard /> : 
+                 activePage === 'audit' ? <AuditLog /> : 
+                 renderStep()}
               </motion.div>
             </AnimatePresence>
           </div>
