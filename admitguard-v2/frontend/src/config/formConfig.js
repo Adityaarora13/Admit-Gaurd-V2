@@ -68,3 +68,32 @@ export const SCORE_SCALES = [
   { label: "CGPA (Scale of 10)", value: "CGPA_10", multiplier: 9.5 },
   { label: "CGPA (Scale of 4)", value: "CGPA_4", multiplier: 25 }
 ];
+
+export const STEP_RULES = {
+  0: [
+    "Applicant must be between 18 and 35 years old.",
+    "Full name must match Aadhaar records.",
+    "Valid email and phone are required for verification."
+  ],
+  1: [
+    "Minimum 60% or 6.0 CGPA required in Undergraduate degree.",
+    "Mandatory levels: 10th, 12th/Diploma, and UG.",
+    "Maximum allowed education gap is 24 months.",
+    "Graduation year must be between 2015 and 2025."
+  ],
+  2: [
+    "Maximum allowed career gap between jobs is 6 months.",
+    "Gaps since graduation > 3 years without experience will be flagged.",
+    "More than 3 unrelated domain switches may require review."
+  ],
+  3: [
+    "Aadhaar number is mandatory for identity verification.",
+    "Minimum screening test score of 40/100 is required.",
+    "Interview status 'Rejected' will lead to immediate application closure."
+  ],
+  4: [
+    "Review all details carefully before final submission.",
+    "Soft-rule exceptions require a valid rationale (>30 characters).",
+    "Max 2 exceptions allowed before mandatory manager review."
+  ]
+};

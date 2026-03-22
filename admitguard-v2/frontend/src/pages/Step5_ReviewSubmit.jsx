@@ -11,11 +11,12 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
-const Step5_ReviewSubmit = ({ formData, onBack, onSuccess, onError }) => {
+const Step5_ReviewSubmit = ({ formData, onBack, onSuccess, onError, setGlobalLoading }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setGlobalLoading(true);
     try {
       const response = await fetch('/api/validate', {
         method: 'POST',
@@ -27,14 +28,24 @@ const Step5_ReviewSubmit = ({ formData, onBack, onSuccess, onError }) => {
       
       if (response.ok) {
         onSuccess(data);
+      } else if (response.status === 422) {
+        // Validation errors
+        onError({ 
+          tier: 'HARD_REJECT', 
+          message: "Validation failed. Please check the following issues:",
+          errors: data.detail.map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`)
+        });
+      } else if (response.status === 429) {
+        onError({ message: "Rate limit exceeded. Please try again in a minute." });
       } else {
-        onError(data.detail || { message: "Validation failed" });
+        onError(data.detail || { message: "Server error. Please try again later." });
       }
     } catch (error) {
       console.error("Submission error:", error);
-      onError({ message: "Network error occurred. Please try again." });
+      onError({ message: "Cannot reach server. Check your connection." });
     } finally {
       setIsSubmitting(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -43,10 +54,10 @@ const Step5_ReviewSubmit = ({ formData, onBack, onSuccess, onError }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Review & Submit</h2>
-        <p className="text-gray-500 mt-2">Double check all information before final submission.</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Review & Submit</h2>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">Double check all information before final submission.</p>
         {exceptionCount > 0 && (
-          <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-xs font-bold uppercase tracking-widest">
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/30 rounded-full text-xs font-bold uppercase tracking-widest">
             <AlertTriangle className="w-4 h-4" />
             {exceptionCount} Exception{exceptionCount > 1 ? 's' : ''} Flagged
           </div>
@@ -55,65 +66,65 @@ const Step5_ReviewSubmit = ({ formData, onBack, onSuccess, onError }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Info Summary */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-          <div className="flex items-center gap-2 border-b border-gray-50 pb-3">
-            <User className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-bold text-gray-900">Personal Details</h3>
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4 transition-colors">
+          <div className="flex items-center gap-2 border-b border-gray-50 dark:border-gray-800 pb-3">
+            <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="font-bold text-gray-900 dark:text-white">Personal Details</h3>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Full Name</span>
-              <span className="font-semibold">{formData.full_name}</span>
+              <span className="text-gray-500 dark:text-gray-400">Full Name</span>
+              <span className="font-semibold dark:text-gray-200">{formData.full_name}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Email</span>
-              <span className="font-semibold">{formData.email}</span>
+              <span className="text-gray-500 dark:text-gray-400">Email</span>
+              <span className="font-semibold dark:text-gray-200">{formData.email}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Phone</span>
-              <span className="font-semibold">+91 {formData.phone}</span>
+              <span className="text-gray-500 dark:text-gray-400">Phone</span>
+              <span className="font-semibold dark:text-gray-200">+91 {formData.phone}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">DOB</span>
-              <span className="font-semibold">{formData.date_of_birth}</span>
+              <span className="text-gray-500 dark:text-gray-400">DOB</span>
+              <span className="font-semibold dark:text-gray-200">{formData.date_of_birth}</span>
             </div>
           </div>
         </div>
 
         {/* Documents & Test Summary */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-          <div className="flex items-center gap-2 border-b border-gray-50 pb-3">
-            <ShieldCheck className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-bold text-gray-900">Verification & Test</h3>
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4 transition-colors">
+          <div className="flex items-center gap-2 border-b border-gray-50 dark:border-gray-800 pb-3">
+            <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="font-bold text-gray-900 dark:text-white">Verification & Test</h3>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Aadhaar</span>
-              <span className="font-mono font-bold">████ ████ {formData.aadhaar_number?.slice(8)}</span>
+              <span className="text-gray-500 dark:text-gray-400">Aadhaar</span>
+              <span className="font-mono font-bold dark:text-gray-200">████ ████ {formData.aadhaar_number?.slice(8)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Screening Score</span>
-              <span className={`font-black ${formData.screening_test_score >= 60 ? 'text-green-600' : 'text-amber-600'}`}>
+              <span className="text-gray-500 dark:text-gray-400">Screening Score</span>
+              <span className={`font-black ${formData.screening_test_score >= 60 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {formData.screening_test_score}/100
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Interview Status</span>
-              <span className="font-bold text-indigo-600 uppercase tracking-widest text-xs">{formData.interview_status}</span>
+              <span className="text-gray-500 dark:text-gray-400">Interview Status</span>
+              <span className="font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest text-xs">{formData.interview_status}</span>
             </div>
           </div>
         </div>
 
         {/* Education Summary */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4 md:col-span-2">
-          <div className="flex items-center gap-2 border-b border-gray-50 pb-3">
-            <GraduationCap className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-bold text-gray-900">Academic Timeline</h3>
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4 md:col-span-2 transition-colors">
+          <div className="flex items-center gap-2 border-b border-gray-50 dark:border-gray-800 pb-3">
+            <GraduationCap className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="font-bold text-gray-900 dark:text-white">Academic Timeline</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="text-[10px] uppercase tracking-widest text-gray-400 font-bold border-b border-gray-50">
+                <tr className="text-[10px] uppercase tracking-widest text-gray-400 font-bold border-b border-gray-50 dark:border-gray-800">
                   <th className="pb-2">Level</th>
                   <th className="pb-2">Institution</th>
                   <th className="pb-2">Year</th>
@@ -121,14 +132,14 @@ const Step5_ReviewSubmit = ({ formData, onBack, onSuccess, onError }) => {
                   <th className="pb-2">Backlogs</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                 {formData.education?.map((edu, i) => (
-                  <tr key={i} className="group hover:bg-gray-50 transition-colors">
-                    <td className="py-3 font-bold text-indigo-600">{edu.level}</td>
-                    <td className="py-3 font-medium text-gray-700">{edu.board_or_university}</td>
-                    <td className="py-3 text-gray-500">{edu.year_of_passing}</td>
-                    <td className="py-3 font-mono font-bold text-gray-900">{edu.score} ({edu.score_scale})</td>
-                    <td className="py-3 text-gray-500">{edu.backlog_count || 0}</td>
+                  <tr key={i} className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <td className="py-3 font-bold text-indigo-600 dark:text-indigo-400">{edu.level}</td>
+                    <td className="py-3 font-medium text-gray-700 dark:text-gray-300">{edu.board_or_university}</td>
+                    <td className="py-3 text-gray-500 dark:text-gray-400">{edu.year_of_passing}</td>
+                    <td className="py-3 font-mono font-bold text-gray-900 dark:text-gray-200">{edu.score} ({edu.score_scale})</td>
+                    <td className="py-3 text-gray-500 dark:text-gray-400">{edu.backlog_count || 0}</td>
                   </tr>
                 ))}
               </tbody>
@@ -137,29 +148,29 @@ const Step5_ReviewSubmit = ({ formData, onBack, onSuccess, onError }) => {
         </div>
 
         {/* Work Summary */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4 md:col-span-2">
-          <div className="flex items-center gap-2 border-b border-gray-50 pb-3">
-            <Briefcase className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-bold text-gray-900">Professional History</h3>
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4 md:col-span-2 transition-colors">
+          <div className="flex items-center gap-2 border-b border-gray-50 dark:border-gray-800 pb-3">
+            <Briefcase className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="font-bold text-gray-900 dark:text-white">Professional History</h3>
           </div>
           {formData.no_experience ? (
-            <p className="text-sm text-gray-500 italic py-4">No work experience provided.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 italic py-4">No work experience provided.</p>
           ) : (
             <div className="space-y-4">
               {formData.work_experience?.map((work, i) => (
-                <div key={i} className="flex items-start justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div key={i} className="flex items-start justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800">
                   <div className="space-y-1">
-                    <p className="font-bold text-gray-900">{work.company_name}</p>
-                    <p className="text-xs text-indigo-600 font-semibold">{work.designation}</p>
+                    <p className="font-bold text-gray-900 dark:text-white">{work.company_name}</p>
+                    <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">{work.designation}</p>
                     <div className="flex flex-wrap gap-1 pt-2">
                       {work.skills?.map(s => (
-                        <span key={s} className="text-[10px] bg-white border border-gray-200 px-2 py-0.5 rounded-full text-gray-500 font-bold uppercase">{s}</span>
+                        <span key={s} className="text-[10px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-full text-gray-500 dark:text-gray-400 font-bold uppercase">{s}</span>
                       ))}
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">{work.start_date} - {work.currently_working ? 'Present' : work.end_date}</p>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase pt-1">{work.domain}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase pt-1">{work.domain}</p>
                   </div>
                 </div>
               ))}
@@ -172,14 +183,14 @@ const Step5_ReviewSubmit = ({ formData, onBack, onSuccess, onError }) => {
         <button
           onClick={onBack}
           disabled={isSubmitting}
-          className="flex-1 px-6 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-all"
+          className="flex-1 px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
         >
           Back
         </button>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+          className="flex-[2] bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 disabled:bg-gray-300 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <>

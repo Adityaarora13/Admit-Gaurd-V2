@@ -1,18 +1,31 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from models.applicant import ApplicantPayload
 from services.validation_engine import ValidationEngine
 from services.intelligence import IntelligenceEngine
 from services.sheets import SheetsService
+from services.limiter import limiter
 from datetime import datetime
 from typing import Dict, Any
+import logging
 
 router = APIRouter()
 v_engine = ValidationEngine()
 i_engine = IntelligenceEngine()
 s_service = SheetsService()
 
+# In-memory duplicate check (for session)
+submitted_emails = set()
+submitted_phones = set()
+
+def mask_email(email: str) -> str:
+    if "@" not in email:
+        return "***"
+    user, domain = email.split("@")
+    return f"{user[:2]}***@{domain}"
+
 @router.post("/api/validate")
-async def validate_applicant(payload: ApplicantPayload):
+@limiter.limit("10/minute")
+async def validate_applicant(request: Request, payload: ApplicantPayload):
     """
     Full validation pipeline:
     1. Run validation engine (Hard rejects check)
@@ -22,6 +35,9 @@ async def validate_applicant(payload: ApplicantPayload):
     """
     # 1. Validation Logic
     v_result = v_engine.validate(payload)
+    
+    # Log the request
+    logging.info(f"Validation Request - Email: {mask_email(payload.email)} - Tier: {v_result['tier']}")
     
     # HARD REJECT: Stop immediately, return 422, do not save to Sheets
     if v_result["tier"] == "HARD_REJECT":
@@ -69,6 +85,10 @@ async def validate_applicant(payload: ApplicantPayload):
     # 4. Save to Sheets
     sheets_saved = s_service.append_applicant(record)
     
+    # Add to duplicate check sets
+    submitted_emails.add(payload.email)
+    submitted_phones.add(payload.phone)
+    
     return {
         "status": "success",
         "tier": v_result["tier"],
@@ -79,6 +99,19 @@ async def validate_applicant(payload: ApplicantPayload):
         "derived": v_result["derived"],
         "sheets_saved": sheets_saved
     }
+
+@router.post("/api/check-duplicate")
+@limiter.limit("10/minute")
+async def check_duplicate(request: Request, payload: Dict[str, str]):
+    email = payload.get("email")
+    phone = payload.get("phone")
+    
+    if email in submitted_emails:
+        return {"duplicate": True, "field": "email"}
+    if phone in submitted_phones:
+        return {"duplicate": True, "field": "phone"}
+    
+    return {"duplicate": False, "field": None}
 
 @router.get("/api/suggest")
 async def suggest(field: str = Query(...), value: str = Query(...)):

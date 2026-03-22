@@ -1,11 +1,24 @@
 import json
 import os
+import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from services.limiter import limiter
 from routers import validate
 
+# Setup logging
+logging.basicConfig(
+    filename='admitguard_audit.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s'
+)
+
 app = FastAPI(title="AdmitGuard v2 API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configure CORS
 app.add_middleware(

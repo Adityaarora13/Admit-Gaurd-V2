@@ -187,12 +187,13 @@ const AuditLog = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* Table / Mobile Cards */}
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden transition-colors">
+        {/* Desktop View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-50 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              <tr className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 <th className="px-6 py-4">Timestamp</th>
                 <th className="px-6 py-4">Applicant</th>
                 <th className="px-6 py-4">Tier</th>
@@ -201,22 +202,22 @@ const AuditLog = () => {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
               {paginatedSubmissions.map((s) => (
                 <React.Fragment key={s.id}>
-                  <tr className={`transition-colors cursor-pointer ${getRowColor(s)}`} onClick={() => setExpandedRow(expandedRow === s.id ? null : s.id)}>
-                    <td className="px-6 py-4 text-xs text-gray-500 font-medium">
+                  <tr className={`transition-colors cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-800/30 ${expandedRow === s.id ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`} onClick={() => setExpandedRow(expandedRow === s.id ? null : s.id)}>
+                    <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400 font-medium">
                       {new Date(s.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-0.5">
-                        <p className="text-sm font-bold text-gray-900">{s.applicant_name}</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">{s.applicant_name}</p>
                         <p className="text-xs text-gray-400">{s.email}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
-                        s.tier === 'CLEAN' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                        s.tier === 'CLEAN' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                       }`}>
                         {s.tier}
                       </span>
@@ -224,29 +225,29 @@ const AuditLog = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${s.risk_score < 30 ? 'bg-green-500' : (s.risk_score < 70 ? 'bg-amber-500' : 'bg-red-500')}`} />
-                        <span className="text-sm font-black text-gray-900">{s.risk_score}</span>
+                        <span className="text-sm font-black text-gray-900 dark:text-white">{s.risk_score}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-xs font-bold text-gray-600">{s.category}</span>
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-400">{s.category}</span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       {expandedRow === s.id ? <ChevronUp className="w-4 h-4 inline text-gray-400" /> : <ChevronDown className="w-4 h-4 inline text-gray-400" />}
                     </td>
                   </tr>
                   {expandedRow === s.id && (
-                    <tr className="bg-gray-50/30">
-                      <td colSpan="6" className="px-6 py-6 border-t border-gray-50">
+                    <tr className="bg-gray-50/30 dark:bg-gray-800/20">
+                      <td colSpan="6" className="px-6 py-6 border-t border-gray-50 dark:border-gray-800">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in slide-in-from-top-2 duration-300">
                           <div className="space-y-3">
-                            <div className="flex items-center gap-2 text-amber-600">
+                            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                               <AlertCircle className="w-4 h-4" />
                               <h4 className="text-[10px] font-black uppercase tracking-widest">System Flags</h4>
                             </div>
                             {s.flags.length > 0 ? (
                               <ul className="space-y-2">
                                 {s.flags.map((f, i) => (
-                                  <li key={i} className="text-xs text-gray-600 bg-white p-2 rounded-lg border border-gray-100 flex items-start gap-2">
+                                  <li key={i} className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 flex items-start gap-2">
                                     <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.5 shrink-0" />
                                     {f.reason}
                                   </li>
@@ -257,14 +258,14 @@ const AuditLog = () => {
                             )}
                           </div>
                           <div className="space-y-3">
-                            <div className="flex items-center gap-2 text-purple-600">
+                            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
                               <Info className="w-4 h-4" />
                               <h4 className="text-[10px] font-black uppercase tracking-widest">Anomalies Detected</h4>
                             </div>
                             {s.anomalies.length > 0 ? (
                               <ul className="space-y-2">
                                 {s.anomalies.map((a, i) => (
-                                  <li key={i} className="text-xs text-gray-600 bg-white p-2 rounded-lg border border-gray-100 flex items-start gap-2">
+                                  <li key={i} className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 flex items-start gap-2">
                                     <div className="w-1 h-1 rounded-full bg-purple-400 mt-1.5 shrink-0" />
                                     {a}
                                   </li>
@@ -282,6 +283,63 @@ const AuditLog = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View (Card List) */}
+        <div className="md:hidden divide-y divide-gray-50 dark:divide-gray-800">
+          {paginatedSubmissions.map((s) => (
+            <div key={s.id} className="p-4 space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-bold text-gray-900 dark:text-white">{s.applicant_name}</div>
+                  <div className="text-xs text-gray-500">{s.email}</div>
+                </div>
+                <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest ${
+                  s.tier === 'CLEAN' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                }`}>
+                  {s.tier}
+                </span>
+              </div>
+              
+              <div className="flex justify-between items-center text-xs">
+                <div className="text-gray-500 dark:text-gray-400">
+                  {new Date(s.timestamp).toLocaleDateString()}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-gray-900 dark:text-white">Risk: {s.risk_score}</span>
+                  <div className={`w-2 h-2 rounded-full ${s.risk_score < 30 ? 'bg-green-500' : (s.risk_score < 70 ? 'bg-amber-500' : 'bg-red-500')}`} />
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setExpandedRow(expandedRow === s.id ? null : s.id)}
+                className="w-full py-2 bg-gray-50 dark:bg-gray-800 rounded-xl text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2"
+              >
+                {expandedRow === s.id ? 'Hide Details' : 'View Details'}
+                {expandedRow === s.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
+
+              {expandedRow === s.id && (
+                <div className="pt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Flags</h4>
+                    <div className="space-y-1">
+                      {s.flags.length > 0 ? s.flags.map((f, i) => (
+                        <div key={i} className="text-[10px] text-amber-600 dark:text-amber-400 flex items-start gap-1.5">
+                          <div className="w-1 h-1 rounded-full bg-amber-400 mt-1 shrink-0" />
+                          <span>{f.reason}</span>
+                        </div>
+                      )) : <span className="text-[10px] text-gray-400">None</span>}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</h4>
+                    <p className="text-xs font-bold dark:text-white">{s.category}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Pagination */}

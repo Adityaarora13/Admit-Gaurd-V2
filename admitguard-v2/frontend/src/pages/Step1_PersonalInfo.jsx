@@ -1,10 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { ADMISSION_RULES } from '../config/formConfig';
 
-const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
+const Step1_PersonalInfo = ({ formData, setFormData, onNext, setGlobalLoading, setErrorModal }) => {
   const [errors, setErrors] = useState({});
   const [age, setAge] = useState(null);
   const [showException, setShowException] = useState(false);
+
+  const checkDuplicate = async (field, value) => {
+    if (!value || errors[field]) return;
+    try {
+      const response = await fetch('/api/check-duplicate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value })
+      });
+      
+      if (response.status === 429) {
+        setErrorModal({ message: "Too many requests. Please wait a minute." });
+        return;
+      }
+
+      const data = await response.json();
+      if (data.duplicate) {
+        setErrors(prev => ({ ...prev, [field]: `This ${field} is already registered.` }));
+      }
+    } catch (error) {
+      console.error("Duplicate check failed", error);
+    }
+  };
 
   useEffect(() => {
     if (formData.date_of_birth) {
@@ -68,7 +91,10 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
-    validateField(name, value);
+    const isValid = validateField(name, value);
+    if (isValid && (name === 'email' || name === 'phone')) {
+      checkDuplicate(name, value);
+    }
   };
 
   const isFormValid = () => {
@@ -86,10 +112,10 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
         <p className="text-gray-500 mt-2">Please provide your basic contact details.</p>
       </div>
 
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+      <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-6 transition-colors">
         {/* Full Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
           <input
             type="text"
             name="full_name"
@@ -97,8 +123,8 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
             onChange={handleChange}
             onBlur={handleBlur}
             placeholder="Enter your full name"
-            className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
-              errors.full_name ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
+              errors.full_name ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
             }`}
           />
           {errors.full_name && <p className="text-red-500 text-xs mt-1">{errors.full_name}</p>}
@@ -106,7 +132,7 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email Address</label>
           <input
             type="email"
             name="email"
@@ -114,8 +140,8 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
             onChange={handleChange}
             onBlur={handleBlur}
             placeholder="you@example.com"
-            className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
+              errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
             }`}
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -123,7 +149,7 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
 
         {/* Phone */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
           <div className="relative">
             <span className="absolute left-4 top-2 text-gray-400">+91</span>
             <input
@@ -133,8 +159,8 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
               onChange={handleChange}
               onBlur={handleBlur}
               placeholder="9876543210"
-              className={`w-full pl-12 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
-                errors.phone ? 'border-red-500' : 'border-gray-300'
+              className={`w-full pl-12 pr-4 py-2 rounded-lg border dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
+                errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
             />
           </div>
@@ -142,24 +168,24 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
         </div>
 
         {/* Date of Birth */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Birth</label>
             <input
               type="date"
               name="date_of_birth"
               value={formData.date_of_birth || ''}
               onChange={handleChange}
               onBlur={handleBlur}
-              className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
-                errors.date_of_birth ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${
+                errors.date_of_birth ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'
               }`}
             />
           </div>
           <div className="flex items-end pb-2">
             {age !== null && (
               <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-                showException ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                showException ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
               }`}>
                 Age: {age} years
               </span>
@@ -169,14 +195,14 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
 
         {/* Exception Rationale */}
         {showException && (
-          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-3">
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-200 dark:border-amber-900/30 space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-amber-800">Age Exception Rationale</label>
-              <span className="text-xs text-amber-600">
+              <label className="text-sm font-semibold text-amber-800 dark:text-amber-400">Age Exception Rationale</label>
+              <span className="text-xs text-amber-600 dark:text-amber-500">
                 {formData.exception_rationale?.length || 0} / {ADMISSION_RULES.soft_rule_exception.min_rationale_length} min chars
               </span>
             </div>
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-amber-700 dark:text-amber-500">
               Age is outside the preferred range ({ADMISSION_RULES.age_rules.min}-{ADMISSION_RULES.age_rules.max}). 
               Please provide a rationale including keywords like "approved by" or "waiver granted".
             </p>
@@ -187,8 +213,8 @@ const Step1_PersonalInfo = ({ formData, setFormData, onNext }) => {
               onBlur={handleBlur}
               rows={3}
               placeholder="Provide justification for age exception..."
-              className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-amber-500 outline-none transition-all ${
-                errors.exception_rationale ? 'border-red-500' : 'border-amber-300'
+              className={`w-full px-4 py-2 rounded-lg border dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-amber-500 outline-none transition-all ${
+                errors.exception_rationale ? 'border-red-500' : 'border-amber-300 dark:border-amber-900/50'
               }`}
             />
             {errors.exception_rationale && <p className="text-red-500 text-xs">{errors.exception_rationale}</p>}
