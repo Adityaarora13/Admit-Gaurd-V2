@@ -2,7 +2,7 @@
 
 **Enterprise Admission Validation Platform**  
 PG Diploma in AI-ML & Agentic AI Engineering — IIT Gandhinagar  
-Built by: [Your Name] | Cohort 1
+Built by: Aditya Arora
 
 ---
 
